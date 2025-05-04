@@ -61,6 +61,15 @@ dependencies:
   # Date picker
   flutter_datetime_picker: ^1.5.1
 
+  #Firebase core
+  firebase_core: ^3.13.0
+
+  #Firebase auth
+  firebase_auth: ^5.5.3
+
+  #Provider
+  provider: ^6.1.5
+
 
 dev_dependencies:
   flutter_test:
