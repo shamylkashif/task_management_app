@@ -1,12 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
+import 'package:task_management_app/provider/auth-provider.dart';
 
 ///
 import '../data/hive_data_store.dart';
 import '../models/task.dart';
 import '../view/home/home_view.dart';
+import 'authentication/login-screen.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   /// Initial Hive DB
   await Hive.initFlutter();
 
@@ -24,7 +30,12 @@ Future<void> main() async {
     } else {}
   });
 
-  runApp(BaseWidget(child: const MyApp()));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AuthProvider(),
+      child: BaseWidget(child: const MyApp()),
+    ),
+  );
 }
 
 class BaseWidget extends InheritedWidget {
@@ -52,6 +63,8 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Hive Todo App',
@@ -95,7 +108,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const HomeView(),
+      home: authProvider.user != null ? HomeView() : LoginScreen(),
     );
   }
 }
