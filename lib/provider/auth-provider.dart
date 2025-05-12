@@ -14,12 +14,28 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signInWithEmail(String email, String password) async {
-    await _firebaseAuth.signInWithEmailAndPassword(email: email, password: password);
+  Future<bool> signInWithEmail(String email, String password) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      return true;
+    } catch (e) {
+      print("Login error: $e");
+      return false;
+    }
   }
 
-  Future<void> registerWithEmail(String email, String password) async {
-    await _firebaseAuth.createUserWithEmailAndPassword(email: email, password: password);
+
+  Future<bool> registerWithEmail(String email, String password) async {
+    try {
+      // Firebase or authentication logic here
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(email: email, password: password);
+      return true; // Return true if sign-up is successful
+    } catch (e) {
+      return false; // Return false if an error occurs
+    }
   }
 
   Future<void> signOut() async {

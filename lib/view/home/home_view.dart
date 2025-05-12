@@ -1,32 +1,29 @@
-
-import 'package:animate_do/animate_do.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:hive_flutter/adapters.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter_slider_drawer/flutter_slider_drawer.dart';
 
-///
-import '../../main.dart';
 import '../../models/task.dart';
+import '../../provider/auth-provider.dart';
 import '../../utils/app_colors.dart';
 import '../../utils/constants.dart';
 import '../../view/home/widgets/task_widget.dart';
 import '../../view/tasks/task_view.dart';
 import '../../utils/strings.dart';
+import '../../main.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomeViewState createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
   GlobalKey<SliderDrawerState> dKey = GlobalKey<SliderDrawerState>();
 
-  /// Checking Done Tasks
   int checkDoneTask(List<Task> task) {
     int i = 0;
     for (Task doneTasks in task) {
@@ -37,7 +34,6 @@ class _HomeViewState extends State<HomeView> {
     return i;
   }
 
-  /// Checking The Value Of the Circle Indicator
   dynamic valueOfTheIndicator(List<Task> task) {
     if (task.isNotEmpty) {
       return task.length;
@@ -46,7 +42,6 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     final base = BaseWidget.of(context);
@@ -60,7 +55,9 @@ class _HomeViewState extends State<HomeView> {
 
         return Scaffold(
           backgroundColor: Colors.white,
-          floatingActionButton: const FAB(),
+          // ✅ Floating Action Buttons
+          floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+          floatingActionButton: _buildFloatingActionButtons(),
 
           // ✅ Use built-in AppBar
           appBar: AppBar(
@@ -84,22 +81,15 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
 
-          // ✅ Use built-in Drawer
           drawer: MySlider(),
 
-          // ✅ Fixed body layout
           body: Column(
             children: [
-              // Top section with progress + text
               _buildTopSection(tasks, textTheme),
-
-              // Divider
               const Padding(
                 padding: EdgeInsets.only(top: 10),
                 child: Divider(thickness: 2, indent: 100),
               ),
-
-              // ✅ Tasks section
               Expanded(
                 child: tasks.isNotEmpty
                     ? ListView.builder(
@@ -114,8 +104,7 @@ class _HomeViewState extends State<HomeView> {
                         children: const [
                           Icon(Icons.delete_outline, color: Colors.grey),
                           SizedBox(width: 8),
-                          Text(MyString.deletedTask,
-                              style: TextStyle(color: Colors.grey))
+                          Text(MyString.deletedTask, style: TextStyle(color: Colors.grey)),
                         ],
                       ),
                       onDismissed: (direction) {
@@ -154,7 +143,6 @@ class _HomeViewState extends State<HomeView> {
     );
   }
 
-  /// Main Body
   Widget _buildTopSection(List<Task> tasks, TextTheme textTheme) {
     return Container(
       margin: const EdgeInsets.fromLTRB(55, 0, 0, 0),
@@ -179,23 +167,57 @@ class _HomeViewState extends State<HomeView> {
             children: [
               Text(MyString.mainTitle, style: textTheme.displayLarge),
               const SizedBox(height: 3),
-              Text("${checkDoneTask(tasks)} of ${tasks.length} task",
-                  style: textTheme.titleMedium),
+              Text("${checkDoneTask(tasks)} of ${tasks.length} task", style: textTheme.titleMedium),
             ],
           )
         ],
       ),
     );
   }
+
+  // Floating Action Buttons including Logout
+  Widget _buildFloatingActionButtons() {
+    final AuthProvider authProvider = AuthProvider();
+    return Stack(
+      children: [
+        Positioned(
+          right: 260, // Move the logout button to the opposite side of the FAB
+          bottom: 20,
+          child: FloatingActionButton(
+            onPressed: () async {
+              await  authProvider.signOut();
+            },
+            backgroundColor: Colors.red,
+            child: const Icon(Icons.logout),
+          ),
+        ),
+        Positioned(
+          right: 20, // Position of the original FAB
+          bottom: 20,
+          child: FloatingActionButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                CupertinoPageRoute(
+                  builder: (context) => TaskView(
+                    taskControllerForSubtitle: null,
+                    taskControllerForTitle: null,
+                    task: null,
+                  ),
+                ),
+              );
+            },
+            child: const Icon(Icons.add),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-/// My Drawer Slider
+// My Slider Drawer remains the same
 class MySlider extends StatelessWidget {
-  MySlider({
-    Key? key,
-  }) : super(key: key);
+  MySlider({Key? key}) : super(key: key);
 
-  /// Icons
   List<IconData> icons = [
     CupertinoIcons.home,
     CupertinoIcons.person_fill,
@@ -203,7 +225,6 @@ class MySlider extends StatelessWidget {
     CupertinoIcons.info_circle_fill,
   ];
 
-  /// Texts
   List<String> texts = [
     "Home",
     "Profile",
@@ -218,9 +239,10 @@ class MySlider extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 90),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-            colors: MyColors.primaryGradientColor,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight),
+          colors: MyColors.primaryGradientColor,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
       child: Column(
         children: [
@@ -241,166 +263,32 @@ class MySlider extends StatelessWidget {
             width: double.infinity,
             height: 300,
             child: ListView.builder(
-                itemCount: icons.length,
-                physics: const NeverScrollableScrollPhysics(),
-                itemBuilder: (ctx, i) {
-                  return InkWell(
-                    // ignore: avoid_print
-                    onTap: () => print("$i Selected"),
-                    child: Container(
-                      margin: const EdgeInsets.all(5),
-                      child: ListTile(
-                          leading: Icon(
-                            icons[i],
-                            color: Colors.white,
-                            size: 30,
-                          ),
-                          title: Text(
-                            texts[i],
-                            style: const TextStyle(
-                              color: Colors.white,
-                            ),
-                          )),
+              itemCount: icons.length,
+              physics: const NeverScrollableScrollPhysics(),
+              itemBuilder: (ctx, i) {
+                return InkWell(
+                  onTap: () => print("$i Selected"),
+                  child: Container(
+                    margin: const EdgeInsets.all(5),
+                    child: ListTile(
+                      leading: Icon(
+                        icons[i],
+                        color: Colors.white,
+                        size: 30,
+                      ),
+                      title: Text(
+                        texts[i],
+                        style: const TextStyle(
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
-                  );
-                }),
+                  ),
+                );
+              },
+            ),
           )
         ],
-      ),
-    );
-  }
-}
-
-/// My App Bar
-class MyAppBar extends StatefulWidget implements PreferredSizeWidget {
-  MyAppBar({Key? key,
-    required this.drawerKey,
-  }) : super(key: key);
-  GlobalKey<SliderDrawerState> drawerKey;
-
-  @override
-  State<MyAppBar> createState() => _MyAppBarState();
-
-  @override
-  Size get preferredSize => const Size.fromHeight(100);
-}
-
-class _MyAppBarState extends State<MyAppBar> with SingleTickerProviderStateMixin {
-  late AnimationController controller;
-  bool isDrawerOpen = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    );
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  /// toggle for drawer and icon aniamtion
-  void toggle() {
-    setState(() {
-      isDrawerOpen = !isDrawerOpen;
-      if (isDrawerOpen) {
-        controller.forward();
-        widget.drawerKey.currentState!.openSlider();
-      } else {
-        controller.reverse();
-        widget.drawerKey.currentState!.closeSlider();
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    var base = BaseWidget.of(context).dataStore.box;
-    return SizedBox(
-      width: double.infinity,
-      height: 132,
-      child: Padding(
-        padding: const EdgeInsets.only(top: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            /// Animated Icon - Menu & Close
-            Padding(
-              padding: const EdgeInsets.only(left: 20),
-              child: IconButton(
-                  splashColor: Colors.transparent,
-                  highlightColor: Colors.transparent,
-                  icon: AnimatedIcon(
-                    icon: AnimatedIcons.menu_close,
-                    progress: controller,
-                    size: 40,
-                  ),
-                  onPressed: toggle),
-            ),
-
-            /// Delete Icon
-            Padding(
-              padding: const EdgeInsets.only(right: 20),
-              child: GestureDetector(
-                onTap: () {
-                  base.isEmpty
-                      ? warningNoTask(context)
-                      : deleteAllTask(context);
-                },
-                child: const Icon(
-                  CupertinoIcons.trash,
-                  size: 40,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Floating Action Button
-class FAB extends StatelessWidget {
-  const FAB({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(
-            builder: (context) => TaskView(
-              taskControllerForSubtitle: null,
-              taskControllerForTitle: null,
-              task: null,
-            ),
-          ),
-        );
-      },
-      child: Material(
-        borderRadius: BorderRadius.circular(15),
-        elevation: 10,
-        child: Container(
-          width: 70,
-          height: 70,
-          decoration: BoxDecoration(
-            color: MyColors.primaryColor,
-            borderRadius: BorderRadius.circular(15),
-          ),
-          child: const Center(
-              child: Icon(
-                Icons.add,
-                color: Colors.white,
-              )),
-        ),
       ),
     );
   }
